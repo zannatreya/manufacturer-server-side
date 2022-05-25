@@ -40,6 +40,17 @@ async function run() {
         const purchaseCollection = client.db('computer_parts').collection('purchase');
         const userCollection = client.db('computer_parts').collection('users');
 
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+                next();
+            }
+            else {
+                res.status(403).send({ message: 'forbidden' });
+            }
+        }
+
 
         app.get('/product', async (req, res) => {
             const query = {};
@@ -54,17 +65,32 @@ async function run() {
             res.send(product);
         });
 
+        app.get('/purchase', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const purchaseOrder = await purchaseCollection.find(query).toArray();
+            res.send(purchaseOrder);
+
+        });
+
         app.post('/purchase', async (req, res) => {
             const purchase = req.body;
             const result = await purchaseCollection.insertOne(purchase);
             res.send(result);
         });
-        app.get('/user', async (req, res) => {
+        app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
         })
 
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin })
+        })
+
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const updateDoc = {
