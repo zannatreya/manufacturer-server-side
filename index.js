@@ -44,6 +44,7 @@ async function run() {
         const toolsCollection = client.db('computer_parts').collection('tools');
         const paymentCollection = client.db('computer_parts').collection('payments');
         const reviewsCollection = client.db('computer_parts').collection('reviews');
+        const profileCollection = client.db('computer_parts').collection('profiles');
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -171,9 +172,19 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/review', verifyJWT, verifyAdmin, async (req, res) => {
+            const reviews = await reviewsCollection.find().toArray();
+            res.send(reviews);
+        })
+
         app.post('/review', async (req, res) => {
             const reviews = req.body;
             const result = await reviewsCollection.insertOne(reviews);
+            res.send(result);
+        });
+        app.post('/myprofile', async (req, res) => {
+            const profiles = req.body;
+            const result = await profileCollection.insertOne(profiles);
             res.send(result);
         });
 
