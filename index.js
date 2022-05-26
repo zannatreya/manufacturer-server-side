@@ -43,6 +43,7 @@ async function run() {
         const userCollection = client.db('computer_parts').collection('users');
         const toolsCollection = client.db('computer_parts').collection('tools');
         const paymentCollection = client.db('computer_parts').collection('payments');
+        const reviewsCollection = client.db('computer_parts').collection('reviews');
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -162,10 +163,17 @@ async function run() {
             const result = await toolsCollection.insertOne(tools);
             res.send(result);
         });
+
         app.delete('/tools/:email', async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const result = await toolsCollection.deleteOne(filter);
+            res.send(result);
+        });
+
+        app.post('/review', async (req, res) => {
+            const reviews = req.body;
+            const result = await reviewsCollection.insertOne(reviews);
             res.send(result);
         });
 
